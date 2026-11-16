@@ -1,31 +1,36 @@
 # LinkedIn Post Scanner
 
-Extensão Chrome (Manifest V3) que rola o feed do LinkedIn sozinha, extrai os posts, resume com a sua própria chave de IA, detecta vagas e calcula o match com o seu perfil. Tudo roda dentro do navegador — sem backend, sem automação externa.
+Extensão Chrome (Manifest V3): rola o feed do LinkedIn, extrai posts, resume com a sua chave de IA e calcula match de vagas. Tudo dentro do navegador — sem backend.
 
-## Instalar (modo desenvolvedor)
+## Rodar
 
 ```bash
 npm install
-npm run build
+npm run build     # gera dist/
+npm run watch     # rebuild contínuo
+npm run typecheck
 ```
 
-1. Abra `chrome://extensions`
-2. Ative o **Modo do desenvolvedor**
-3. **Carregar sem compactação** → selecione a pasta `dist/`
-4. Abra `linkedin.com/feed` e clique no ícone da extensão
+1. `chrome://extensions` → **Modo do desenvolvedor**
+2. **Carregar sem compactação** → pasta `dist/`
+3. Abra `linkedin.com/feed` e clique no ícone
 
-Durante o desenvolvimento: `npm run watch` e, a cada mudança, clique em **Recarregar** na extensão e recarregue a aba.
+## Estrutura
 
-## Documentação
+```
+public/manifest.json      manifest MV3
+public/icons/             ícones
+build.mjs                 esbuild → dist/ (content IIFE, SW/UI ESM)
+src/content/index.ts      content script (loop de scroll vive aqui)
+src/sw.ts                 service worker (só roteia)
+src/sidepanel/            painel lateral 380px
+src/dashboard/            dashboard.html#/rota
+src/shared/theme.css      tokens claro/escuro
+```
 
-| Arquivo | Conteúdo |
-|---|---|
-| `docs/SPEC.md` | especificação completa (arquitetura, DOM, IA, erros, aceite) |
-| `docs/PROMPTS.md` | prompts por fase para usar com Claude Code |
-| `CLAUDE.md` | invariantes e contexto que o Claude Code lê automaticamente |
-| `NOTES.md` | descobertas de campo sobre o DOM do LinkedIn |
-| `design/prototype.html` | protótipo visual de referência |
+## Regras que não se quebram
 
-## Privacidade
-
-Chaves de IA ficam em `chrome.storage.local`, nunca são exportadas nem enviadas a nenhum servidor além do provedor escolhido. Sem telemetria.
+- Loop de scroll no content script, nunca no service worker (ele morre em ~30s).
+- Chamadas de IA nas páginas de UI (sidepanel/dashboard), nunca no SW.
+- Seletores só `data-testid` / `aria-label` / texto. Classes `k4d*` mudam a cada deploy.
+- Sem `eval`, sem backend, sem endpoints internos do LinkedIn (`/voyager/`).
