@@ -71,7 +71,7 @@ async function main() {
   if (missingEntries.length) {
     console.error('\n[build] Faltando arquivos de entrada:');
     for (const m of missingEntries) console.error('  - ' + m);
-    console.error('\nCrie os stubs da Fase 1 (docs/PROMPTS.md) e rode de novo.\n');
+    console.error('\nCrie os stubs de entrada da Fase 1 (prompt no chat) e rode de novo.\n');
     process.exit(1);
   }
 
