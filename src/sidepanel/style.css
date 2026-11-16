@@ -1,0 +1,37 @@
+/* Side panel: 380px é a largura de projeto. */
+body {
+  min-width: 320px;
+}
+
+.sp-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.sp-title {
+  font-size: 16px;
+}
+
+.sp-link {
+  font-size: 12px;
+  color: var(--color-accent-700);
+  text-decoration: none;
+}
+
+.sp-link:hover {
+  text-decoration: underline;
+}
+
+.sp-main {
+  padding: var(--space-5);
+}
+
+.sp-status {
+  margin: 0;
+  font-size: 14px;
+  color: var(--color-neutral-700);
+}

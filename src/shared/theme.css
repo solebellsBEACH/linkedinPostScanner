@@ -1,0 +1,96 @@
+/* Tokens de tema — claro e escuro. Único lugar onde cores são definidas. */
+:root {
+  color-scheme: light;
+
+  --color-bg: #fbfbfa;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f4f4f1;
+  --color-text: #1a1a19;
+  --color-divider: #e6e6e2;
+
+  --color-neutral-400: #a3a39c;
+  --color-neutral-500: #86867f;
+  --color-neutral-600: #6b6b66;
+  --color-neutral-700: #4d4d48;
+
+  --color-accent: #0f766e;
+  --color-accent-100: #d9f2ef;
+  --color-accent-300: #7cc9c2;
+  --color-accent-400: #4fb3aa;
+  --color-accent-500: #2c9a91;
+  --color-accent-600: #158079;
+  --color-accent-700: #0f6b64;
+  --color-accent-800: #0b524d;
+
+  --font-heading: 'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #121212;
+  --color-surface: #1a1a19;
+  --color-surface-alt: #222220;
+  --color-text: #f2f2ef;
+  --color-divider: #2e2e2b;
+
+  --color-neutral-400: #6f6f69;
+  --color-neutral-500: #8c8c85;
+  --color-neutral-600: #a3a39c;
+  --color-neutral-700: #c4c4bc;
+
+  --color-accent: #4fb3aa;
+  --color-accent-100: #12312e;
+  --color-accent-300: #1f5f59;
+  --color-accent-400: #2c7d75;
+  --color-accent-500: #3c9a91;
+  --color-accent-600: #4fb3aa;
+  --color-accent-700: #7cc9c2;
+  --color-accent-800: #b6e5e0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
