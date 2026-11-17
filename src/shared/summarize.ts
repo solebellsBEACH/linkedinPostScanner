@@ -261,7 +261,7 @@ export async function analyze(input: AnalyzeInput): Promise<Analysis> {
 
   jobs.sort((a, b) => (b.match ?? -1) - (a.match ?? -1));
 
-  if (!profile && !input.allowNoProfile && jobs.length > 0) throw new AppError('PROFILE_UNREADABLE');
+  // Perfil ausente não impede a análise: as vagas ficam com match desconhecido.
   if (kind === 'prompt' && bullets.length === 0) throw new AppError('PROMPT_NO_RESULTS');
 
   return {

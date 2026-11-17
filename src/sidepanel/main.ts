@@ -1,6 +1,6 @@
 import { AppError, isAppError, type ErrorCode } from '../shared/errors';
 import { getApiKey, getSettings, getTheme, PROVIDERS } from '../shared/storage';
-import { estimateUsage, getPostsSince, getProfile, putAnalysis, putHistory, putJobs } from '../shared/idb';
+import { estimateUsage, getPostsSince, getProfile, putAnalysis, putHistory, replaceJobs } from '../shared/idb';
 import { analyze } from '../shared/summarize';
 import {
   IDLE_STATE,
@@ -371,8 +371,9 @@ async function runAnalysis(options: { ignoreProfile?: boolean } = {}): Promise<v
     });
 
     await putAnalysis(analysis);
-    // Sem isso as vagas existem no resumo mas a tela Vagas fica vazia.
-    if (analysis.jobs.length > 0) await putJobs(analysis.jobs);
+    // Substitui o conjunto: sem isso as vagas existem no resumo mas a tela Vagas
+    // fica vazia, e análises repetidas duplicam linhas.
+    if (analysis.kind === 'resume') await replaceJobs(analysis.jobs);
     await putHistory({
       id: crypto.randomUUID(),
       analysisId: analysis.id,
@@ -383,6 +384,11 @@ async function runAnalysis(options: { ignoreProfile?: boolean } = {}): Promise<v
     });
 
     renderAnalysis(analysis);
+    if (!profile && analysis.jobs.length > 0) {
+      notice.textContent =
+        'Sem perfil lido: as vagas ficaram sem match. Abra linkedin.com/in/me uma vez para calcular.';
+      notice.hidden = false;
+    }
   } catch (err) {
     console.warn('[PR] análise falhou', err);
     renderFailure(err);

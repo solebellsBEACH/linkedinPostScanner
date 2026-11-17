@@ -136,3 +136,24 @@ Medições que motivaram cada correção (Chrome real, perfil logado, DeepSeek):
 Limitação conhecida (não corrigida): o detector de vagas aceita post de desabafo como vaga
 ("Estou me aproximando de um mês de desemprego…" virou vaga com modelo "python", 0% match).
 Prompt de detecção precisa exigir sinais explícitos (cargo + empresa/link/aplicação).
+
+## 2026-11-17 — PROFILE_UNREADABLE no painel e vagas duplicadas
+
+Sintoma do usuário: `[PR] análise falhou AppError: PROFILE_UNREADABLE` no painel, mesmo com o
+resumo funcionando. Causa: `summarize.ts` lançava erro quando `jobs.length > 0` e o perfil não
+estava no IndexedDB — ou seja, quem nunca abriu `/in/me` **com a extensão nova** não conseguia
+resumir nada. Matar a análise inteira porque o match é opcional é errado.
+
+Correções:
+1. Perfil deixou de ser pré-requisito: sem perfil, as vagas ficam com `match: null` (a tabela
+   mostra "—") e o painel exibe "Sem perfil lido: as vagas ficaram sem match. Abra
+   linkedin.com/in/me uma vez para calcular."
+2. Captura do perfil mais tolerante: retry (até 5× a cada 2s) porque o topcard hidrata depois do
+   DOMContentLoaded, e re-leitura quando a rota SPA muda para `/in/*` (antes só rodava uma vez
+   por carregamento de página).
+3. `replaceJobs()`: a tela Vagas passou a representar a última análise de resumo. Antes cada
+   análise nova somava linhas e a mesma vaga aparecia 2–3× com matches diferentes.
+
+Medição depois: perfil limpo do IDB → resumo de 29 posts OK, 8 vagas com "—"; abrir `/in/me`
+→ perfil salvo na hora (24 skills); novo resumo → Full-Stack 33%. Store `jobs` = 8 linhas
+distintas, sem duplicatas.

@@ -158,14 +158,27 @@ if (debugEnabled) {
 
 // ---------------------------------------------------------------- perfil
 
-if (location.pathname.startsWith('/in/')) {
-  setTimeout(() => {
-    const profile = readProfile();
-    if (profile) {
-      send({ type: 'PROFILE', profile });
-      console.log('[PR] perfil lido', profile.name, profile.skills.length, 'skills');
-    } else {
-      console.warn('[PR] perfil não identificado nesta página');
-    }
-  }, 2500);
+function captureProfile(attempt = 0): void {
+  const profile = readProfile();
+  if (profile) {
+    send({ type: 'PROFILE', profile });
+    console.log('[PR] perfil lido', profile.name, profile.skills.length, 'skills');
+    return;
+  }
+  // O nome/topcard às vezes hidrata depois do DOMContentLoaded; tenta de novo.
+  if (attempt < 5) {
+    setTimeout(() => captureProfile(attempt + 1), 2000);
+    return;
+  }
+  console.warn('[PR] perfil não identificado nesta página');
 }
+
+if (location.pathname.startsWith('/in/')) setTimeout(() => captureProfile(), 1500);
+
+// LinkedIn é SPA: abrir /in/<slug>/ sem recarregar não dispara o content script de novo.
+let lastPath = location.pathname;
+setInterval(() => {
+  if (location.pathname === lastPath) return;
+  lastPath = location.pathname;
+  if (lastPath.startsWith('/in/')) setTimeout(() => captureProfile(), 1500);
+}, 1500);

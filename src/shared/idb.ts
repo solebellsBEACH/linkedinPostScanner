@@ -206,6 +206,17 @@ export function putJobs(jobs: readonly Job[]): Promise<void> {
   return putMany('jobs', jobs);
 }
 
+/**
+ * A tela Vagas representa a última análise de resumo. Sem trocar o conjunto
+ * inteiro, cada nova análise some com as antigas e a lista duplica.
+ */
+export async function replaceJobs(jobs: readonly Job[]): Promise<void> {
+  const { os, tx } = await store('jobs', 'readwrite');
+  os.clear();
+  for (const job of jobs) os.put(job);
+  await txDone(tx);
+}
+
 /** Todas as vagas, ou só as extraídas de um post específico. */
 export async function listJobs(sourceActivityId?: string): Promise<Job[]> {
   const { os } = await store('jobs', 'readonly');
