@@ -3,6 +3,7 @@ import {
   type ContentCommand,
   type ContentMessage,
 } from '../shared/messaging';
+import { readProfile } from './profile';
 import { getState, startScroll, stopScroll, type ScrollEvent } from './scroll';
 
 // ---------------------------------------------------------------- porta com o SW
@@ -50,7 +51,7 @@ function connect(): void {
 
   port.onMessage.addListener((message: ContentCommand) => {
     if (message.type === 'START') {
-      startScroll(handle);
+      startScroll(handle, message.limits);
     } else if (message.type === 'STOP') {
       stopScroll('manual');
     }
@@ -152,4 +153,18 @@ document.addEventListener('pr:stop', () => stopScroll('manual'));
 if (debugEnabled) {
   paintDebug();
   setTimeout(() => startScroll(handle), 3000);
+}
+
+// ---------------------------------------------------------------- perfil
+
+if (location.pathname.startsWith('/in/')) {
+  setTimeout(() => {
+    const profile = readProfile();
+    if (profile) {
+      send({ type: 'PROFILE', profile });
+      console.log('[PR] perfil lido', profile.name, profile.skills.length, 'skills');
+    } else {
+      console.warn('[PR] perfil não identificado nesta página');
+    }
+  }, 2500);
 }

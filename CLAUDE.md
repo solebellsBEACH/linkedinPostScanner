@@ -62,10 +62,11 @@ build.mjs  tsconfig.json  package.json  .gitignore
 public/manifest.json  public/icons/*
 src/sw.ts
 src/content/{index,scroll,extract,profile}.ts
-src/shared/{types,idb,storage,errors,messaging,providers,ai,summarize,jobs}.ts
+src/shared/{types,idb,storage,errors,messaging,providers,ai,summarize,jobs,ui}.ts
 src/shared/theme.css
 src/sidepanel/{index.html,main.ts,style.css}
-src/dashboard/{index.html,main.ts,router.ts,style.css,pages/*.ts}
+src/dashboard/{index.html,main.ts,router.ts,style.css}
+src/dashboard/pages/{common,overview,jobs,job,history,chat,settings}.ts
 ```
 
 Bundles de saída: `content.js` (IIFE) · `sw.js`, `sidepanel.js`, `dashboard.js` (ESM).

@@ -26,6 +26,7 @@ export type Job = {
   easyApply: boolean;
   url: string;
   sourceActivityId: string;
+  match: number | null;
 };
 
 export type Profile = {

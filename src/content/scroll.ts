@@ -64,6 +64,9 @@ const END_ROUNDS = 6;
 const MAX_DELAY_MS = 2600;
 const MIN_DELAY_MS = 900;
 
+export type ScrollLimits = { maxRounds?: number; maxMinutes?: number };
+
+let limits: ScrollLimits = {};
 let running = false;
 let onEvent: ((event: ScrollEvent) => void) | null = null;
 let startPath = '';
@@ -215,7 +218,7 @@ export function stopScroll(reason: StopReason = 'manual'): void {
   emit({ type: 'stop', reason });
 }
 
-export function startScroll(handler: (event: ScrollEvent) => void): void {
+export function startScroll(handler: (event: ScrollEvent) => void, nextLimits?: ScrollLimits): void {
   if (running) {
     console.warn('[PR] startScroll ignorado: já existe um loop rodando');
     return;
@@ -227,6 +230,7 @@ export function startScroll(handler: (event: ScrollEvent) => void): void {
     return;
   }
 
+  limits = nextLimits ?? {};
   onEvent = handler;
   running = true;
   loopToken += 1;
@@ -263,11 +267,11 @@ async function runLoop(root: HTMLElement, token: number): Promise<void> {
         emit({ type: 'stop', reason: 'route-change' });
         break;
       }
-      if (state.round >= MAX_ROUNDS) {
+      if (state.round >= (limits.maxRounds ?? MAX_ROUNDS)) {
         emit({ type: 'stop', reason: 'max-rounds' });
         break;
       }
-      if (Date.now() - startedAt > MAX_MINUTES * 60_000) {
+      if (Date.now() - startedAt > (limits.maxMinutes ?? MAX_MINUTES) * 60_000) {
         emit({ type: 'stop', reason: 'max-time' });
         break;
       }

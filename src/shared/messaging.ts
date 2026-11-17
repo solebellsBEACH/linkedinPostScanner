@@ -1,4 +1,4 @@
-import type { Post } from './types';
+import type { Post, Profile } from './types';
 import { AppError, type ErrorCode } from './errors';
 
 /** Estado do loop de scroll de uma aba, compartilhado entre SW e side panel. */
@@ -25,8 +25,10 @@ export const IDLE_STATE: ScrollState = {
 
 // ------------------------------------------------------- side panel → service worker
 
+export type ScrollLimits = { maxRounds: number; maxMinutes: number };
+
 export type PanelRequest =
-  | { type: 'START_SCROLL'; tabId: number }
+  | { type: 'START_SCROLL'; tabId: number; limits?: ScrollLimits }
   | { type: 'STOP_SCROLL'; tabId: number }
   | { type: 'GET_STATE'; tabId: number };
 
@@ -49,11 +51,12 @@ export type ContentMessage =
   | { type: 'HELLO'; path: string }
   | { type: 'ROUND'; round: number; posts: number; scrollHeight: number; noProgress: number; strategy: string }
   | { type: 'POST_BATCH'; posts: Post[]; unrecognized: number }
+  | { type: 'PROFILE'; profile: Profile }
   | { type: 'STOPPED'; reason: string }
   | { type: 'FAILED'; code: ErrorCode; detail?: string };
 
 /** Ordem enviada do service worker para o content script. */
-export type ContentCommand = { type: 'START' } | { type: 'STOP' };
+export type ContentCommand = { type: 'START'; limits?: ScrollLimits } | { type: 'STOP' };
 
 /**
  * Comando pontual via chrome.runtime.sendMessage.

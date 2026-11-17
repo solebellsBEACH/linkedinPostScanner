@@ -188,6 +188,13 @@ export function getAnalysis(id: string): Promise<Analysis | undefined> {
   return getOne('analyses', id);
 }
 
+/** Remove uma análise corrompida ou indesejada. */
+export async function deleteAnalysis(id: string): Promise<void> {
+  const { tx, os } = await store('analyses', 'readwrite');
+  os.delete(id);
+  await txDone(tx);
+}
+
 /** Análises mais recentes primeiro. */
 export function listAnalyses(limit = Number.POSITIVE_INFINITY): Promise<Analysis[]> {
   return listByIndexDesc('analyses', 'createdAt', limit);

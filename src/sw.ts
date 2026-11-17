@@ -1,4 +1,4 @@
-import { openDb, putPosts } from './shared/idb';
+import { openDb, putPosts, putProfile } from './shared/idb';
 import { getSchemaVersion, setSchemaVersion } from './shared/storage';
 import {
   CONTENT_PORT,
@@ -136,6 +136,7 @@ async function handleContent(tabId: number, port: chrome.runtime.Port, message: 
           status: 'error',
           error: { code: 'STORAGE_FULL', detail: err instanceof Error ? err.message : String(err) },
         });
+        pushToPanels({ type: 'ERROR', code: 'STORAGE_FULL' });
         return;
       }
       // postCount vem do total acumulado no content script (mensagem ROUND).
@@ -144,11 +145,24 @@ async function handleContent(tabId: number, port: chrome.runtime.Port, message: 
       }
       break;
     }
+    case 'PROFILE': {
+      try {
+        await putProfile(message.profile);
+        console.log('[PR] perfil salvo', message.profile.name);
+      } catch (err) {
+        console.warn('[PR] falha ao salvar perfil', err);
+      }
+      break;
+    }
     case 'STOPPED':
-      patchState(tabId, { status: 'done', stopReason: message.reason });
+      patchState(tabId, {
+        status: stateOf(tabId).status === 'error' ? 'error' : 'done',
+        stopReason: message.reason,
+      });
       break;
     case 'FAILED':
       patchState(tabId, { status: 'error', error: { code: message.code, detail: message.detail } });
+      pushToPanels({ type: 'ERROR', code: message.code, detail: message.detail });
       break;
   }
 }
@@ -185,7 +199,7 @@ chrome.runtime.onMessage.addListener((request: PanelRequest, _sender, sendRespon
           stopReason: undefined,
           error: undefined,
         });
-        port.postMessage({ type: 'START' });
+        port.postMessage({ type: 'START', limits: request.limits });
       } else {
         port.postMessage({ type: 'STOP' });
       }
