@@ -76,3 +76,26 @@ Só acrescente linhas. Nunca reescreva o histórico.
   `focus`/`visibilitychange`, com throttle de 1,5 s); `#/job?id=<id>` caía na visão geral.
 - Não coberto (exige sessão logada): loop de scroll, extração, expansão de texto, dedupe,
   critérios de parada, contador ao vivo e sobrevivência à morte do SW.
+
+## 2026-11-17 — teste real no feed logado: extrator descobria ~1 post
+
+- Ambiente: Chrome 151 com cópia do perfil do usuário (`~/.config/google-chrome-debug`, sessão LinkedIn
+  válida), extensão instalada via CDP `Extensions.loadUnpacked`. Sem porta de debug no perfil padrão
+  (Chrome 136+ bloqueia), por isso a cópia.
+- Medição no feed real: 9–16 `[data-testid="expandable-text-box"]` montados por tela, mas apenas
+  **1–2** âncoras `a[href*="urn:li:activity:"]` no DOM inteiro. O loop rolava normalmente
+  (scrollHeight 3.9k → 42k, rounds subindo), mas gravava 1 post por execução.
+- Causa: `extractPosts` só descobria posts por âncora de atividade; em 2026 a maioria dos cards não
+  linka o próprio URN. `findCard` também dependia dessa âncora.
+- Correção: descoberta liderada pelo corpo do post (`expandable-text-box`) → sobe até o item
+  virtualizado (`data-lazy-mount-id`/`data-virtualized-item`) → discrimina post de comentário pelo
+  aria-label do menu ("Open control menu for post by") ou botão de reação → id por URN do card,
+  depois `componentkey`, depois hash autor+texto (prefixos `ck:`/`h:`). Log de rodada passou a
+  imprimir escalares em vez de objeto.
+- Resultado medido após a correção: 40 s de rolagem → 2 → **24 posts** gravados (lotes de 8, 2 e 12),
+  zero texto vazio, zero autor vazio.
+- Pendências conhecidas: só 4/29 posts têm id numérico → os demais ficam com URL vazia (sem permalink);
+  contador de comentários lido como 0; `authorHeadline` às vezes captura a linha de contexto social
+  ("X likes this") em vez do cargo.
+- Nota operacional: `chrome.runtime.reload()` via CDP derruba a inscrição da extensão carregada por
+  `Extensions.loadUnpacked`; é preciso recarregar pelo chrome://extensions ou reabrir o navegador.

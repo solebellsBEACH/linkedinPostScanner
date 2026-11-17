@@ -74,26 +74,72 @@ function countFromText(text: string, nouns: readonly string[]): number {
   return 0;
 }
 
-/** Encontra o card do post caminhando a partir do link do post. */
-function findCard(anchor: Element): HTMLElement | null {
-  let node: Element | null = anchor;
-  let best: HTMLElement | null = null;
+/** Marcadores do item virtualizado que envolve um post. */
+const CARD_ROOT = '[data-lazy-mount-id],[data-virtualized-item],[data-testid="main-feed-card"]';
+const POST_TEXT_BOX = '[data-testid="expandable-text-box"]';
+const POST_MENU =
+  'button[aria-label^="Open control menu for post by"],button[aria-label^="Abrir menu de controle da publicação de"]';
+const REACTION_STATE =
+  '[aria-label^="Reaction button state"],[aria-label^="Estado do botão de reação"]';
+/** Elementos que carregam o URN da atividade (link do post, comentário, componente). */
+const URN_HOLDERS =
+  'a[href*="urn:li:activity:"],[componentkey*="urn:li:activity:"],[id*="urn:li:activity:"],[data-urn*="urn:li:activity:"]';
 
-  for (let depth = 0; depth < 12 && node; depth += 1) {
-    const el = node as HTMLElement;
-    if (depth > 0 && el.querySelector('[data-testid="expandable-text-box"]')) {
-      best = el;
-      const hasChrome =
-        el.hasAttribute('data-virtualized-item') ||
-        el.hasAttribute('data-lazy-mount-id') ||
-        el.hasAttribute('componentkey') ||
-        el.querySelector('button[aria-label^="Open control menu"]') !== null ||
-        el.querySelector('button[aria-label^="Abrir menu de controle"]') !== null;
-      if (hasChrome) return el;
-    }
-    node = el.parentElement;
+/** Sobe do corpo do texto até o item virtualizado que representa o post. */
+function cardFromBody(body: Element): HTMLElement | null {
+  let node: Element | null = body;
+  for (let depth = 0; depth < 14 && node; depth += 1) {
+    if (node instanceof HTMLElement && node.matches(CARD_ROOT)) return node;
+    node = node.parentElement;
   }
-  return best;
+  return null;
+}
+
+/** Diferencia post de comentário: só post tem menu "post by" ou botão de reação. */
+function isPostCard(card: HTMLElement): boolean {
+  return card.querySelector(POST_MENU) !== null || card.querySelector(REACTION_STATE) !== null;
+}
+
+function shortHash(value: string): string {
+  let hash = 5381;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) + hash + value.charCodeAt(index)) >>> 0;
+  }
+  return hash.toString(36);
+}
+
+/**
+ * Resolve o id do post. Em 2026 a maioria dos cards não linka o próprio URN:
+ * o link de atividade aparece em poucos posts, então caímos para URNs de
+ * comentários/componentes dentro do card e, por último, para um hash estável.
+ */
+function idForCard(card: HTMLElement, author: string, text: string): string {
+  for (const el of Array.from(card.querySelectorAll(URN_HOLDERS))) {
+    const raw =
+      el.getAttribute('href') ?? el.getAttribute('componentkey') ?? el.getAttribute('data-urn') ?? el.id ?? '';
+    const match = ANY_ACTIVITY.exec(raw);
+    if (match?.[1]) return match[1];
+  }
+  const key = card.getAttribute('componentkey') ?? card.getAttribute('data-lazy-mount-id') ?? '';
+  if (key) return `ck:${key}`;
+  return `h:${shortHash(`${author}|${text.slice(0, 120)}`)}`;
+}
+
+/** Cards de post montados agora, já com o id resolvido (um por post). */
+function collectCards(container: ParentNode): { id: string; card: HTMLElement }[] {
+  const out: { id: string; card: HTMLElement }[] = [];
+  const ids = new Set<string>();
+  for (const body of Array.from(container.querySelectorAll(POST_TEXT_BOX))) {
+    const card = cardFromBody(body);
+    if (!card || !isPostCard(card)) continue;
+    const text = textOf(body);
+    if (!text) continue;
+    const id = idForCard(card, readAuthor(card), text);
+    if (ids.has(id)) continue;
+    ids.add(id);
+    out.push({ id, card });
+  }
+  return out;
 }
 
 function readAuthor(card: HTMLElement): string {
@@ -152,7 +198,7 @@ function readPost(activityId: string, card: HTMLElement, expanded: boolean): Pos
   const author = readAuthor(card);
   const href =
     card.querySelector<HTMLAnchorElement>('a[href*="urn:li:activity:"]')?.href ??
-    `https://www.linkedin.com/feed/update/urn:li:activity:${activityId}/`;
+    (/^\d+$/.test(activityId) ? `https://www.linkedin.com/feed/update/urn:li:activity:${activityId}/` : '');
 
   const hasVideo = card.querySelector('video, [data-testid="video-player"]') !== null;
   const hasImage = card.querySelector('img[src*="dms/image"], img[src*="media"]') !== null;
@@ -175,13 +221,8 @@ function readPost(activityId: string, card: HTMLElement, expanded: boolean): Pos
   };
 }
 
-function cardById(container: ParentNode, activityId: string): HTMLElement | null {
-  for (const anchor of container.querySelectorAll<HTMLAnchorElement>('a[href*="urn:li:activity:"]')) {
-    if (activityIdFromHref(anchor.getAttribute('href') ?? '') !== activityId) continue;
-    const card = findCard(anchor);
-    if (card) return card;
-  }
-  return null;
+function findCardById(container: ParentNode, activityId: string): HTMLElement | null {
+  return collectCards(container).find((entry) => entry.id === activityId)?.card ?? null;
 }
 
 /**
@@ -189,45 +230,28 @@ function cardById(container: ParentNode, activityId: string): HTMLElement | null
  * `seen` evita reprocessar (a lista é virtualizada e recicla nós).
  */
 export async function extractPosts(container: ParentNode, seen: Set<string>): Promise<ExtractResult> {
-  const anchors = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href*="urn:li:activity:"]'));
-  const byId = new Map<string, HTMLElement>();
-
-  for (const anchor of anchors) {
-    const href = anchor.getAttribute('href') ?? '';
-    const id = activityIdFromHref(href);
-    if (!id || seen.has(id) || byId.has(id)) continue;
-    const card = findCard(anchor);
-    if (card) byId.set(id, card);
-  }
-
   const posts: Post[] = [];
   let unrecognized = 0;
 
-  for (const [id, card] of byId) {
+  for (const { id, card } of collectCards(container)) {
+    if (seen.has(id)) continue;
     const expanded = await expandIfTruncated(card);
     // A expansão re-renderiza o nó: relê o card atual antes de extrair.
-    const fresh = expanded ? (cardById(container, id) ?? card) : card;
+    const fresh = expanded ? (findCardById(container, id) ?? card) : card;
     const post = readPost(id, fresh, expanded);
+    // Marca como visto mesmo quando falha: sem isso o post travaria o loop.
+    seen.add(id);
     if (!post) {
-      // Marca como visto: sem isso o mesmo post falharia toda rodada e
-      // travaria o contador de progresso do loop.
-      seen.add(id);
       unrecognized += 1;
       continue;
     }
-    seen.add(id);
     posts.push(post);
   }
 
   return { posts, unrecognized };
 }
 
-/** activityIds presentes no DOM agora (para medir progresso sem extrair). */
+/** ids dos posts montados agora (para medir progresso sem extrair). */
 export function visibleActivityIds(container: ParentNode): Set<string> {
-  const ids = new Set<string>();
-  for (const anchor of container.querySelectorAll<HTMLAnchorElement>('a[href*="urn:li:activity:"]')) {
-    const id = activityIdFromHref(anchor.getAttribute('href') ?? '');
-    if (id) ids.add(id);
-  }
-  return ids;
+  return new Set(collectCards(container).map((entry) => entry.id));
 }

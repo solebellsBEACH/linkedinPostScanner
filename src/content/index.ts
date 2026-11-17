@@ -123,7 +123,8 @@ function handle(event: ScrollEvent): void {
         noProgress: event.noProgress,
         strategy: event.strategy,
       });
-      if (event.round % 5 === 0) console.log('[PR] round', event);
+      if (event.round % 5 === 0)
+        console.log('[PR] round', event.round, 'posts', event.posts, 'sh', event.scrollHeight, 'noProg', event.noProgress);
       paintDebug();
       break;
     case 'posts':
