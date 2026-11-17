@@ -1,0 +1,71 @@
+#app {
+  display: grid;
+  grid-template-columns: 208px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.db-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-4);
+  border-right: 1px solid var(--color-divider);
+  background: var(--color-surface);
+}
+
+.db-brand {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.db-nav {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.db-nav-link {
+  display: block;
+  padding: 7px var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--color-neutral-700);
+  font-size: 13px;
+}
+
+.db-nav-link:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.db-nav-link.is-active {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-weight: 500;
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+.db-main {
+  padding: var(--space-7) var(--space-7) var(--space-6);
+  max-width: 1080px;
+}
+
+.db-crumb {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-neutral-500);
+}
+
+.db-heading {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
