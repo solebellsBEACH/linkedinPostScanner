@@ -1,5 +1,5 @@
 import { testKey } from '../../shared/ai';
-import { isAppError } from '../../shared/errors';
+import { humanizeDetail, isAppError } from '../../shared/errors';
 import {
   clearAll,
   getPostsSince,
@@ -160,7 +160,7 @@ export async function renderSettings(): Promise<HTMLElement> {
       status.textContent = `Conectado · ${ms} ms (${PROVIDER_INFO[provider].label} / ${modelInput.value || DEFAULT_MODEL[provider]})`;
     } catch (err) {
       const code = isAppError(err) ? err.code : 'NETWORK_OFFLINE';
-      status.textContent = `Falhou (${code}). ${isAppError(err) ? (err.detail ?? '') : ''}`.trim();
+      status.textContent = `Falhou (${code}). ${humanizeDetail(isAppError(err) ? err.detail : '')}`.trim();
     } finally {
       testButton.disabled = false;
       await refreshKeyPlaceholder();

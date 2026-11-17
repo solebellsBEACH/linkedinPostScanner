@@ -1,6 +1,6 @@
 import { callAI } from '../../shared/ai';
-import { AppError, isAppError } from '../../shared/errors';
-import { getPostsSince, listAnalyses } from '../../shared/idb';
+import { AppError, humanizeDetail, isAppError } from '../../shared/errors';
+import { getPostsSince, listAnalyses, putAnalysis, putHistory } from '../../shared/idb';
 import { PROVIDER_INFO } from '../../shared/providers';
 import { getApiKey, getSettings } from '../../shared/storage';
 import { formatCount, h } from '../../shared/ui';
@@ -104,10 +104,37 @@ export async function renderChat(): Promise<HTMLElement> {
       });
 
       if (textNode) textNode.textContent = answer;
+
+      // Persiste a resposta: o filtro "Prompts" do Histórico depende disso.
+      const analysis = {
+        id: crypto.randomUUID(),
+        kind: 'prompt' as const,
+        query: question,
+        createdAt: Date.now(),
+        postCount: used,
+        unrecognized: 0,
+        topics: [],
+        bullets: [
+          {
+            text: answer,
+            refs: [...new Set((answer.match(/\[\d+\]/g) ?? []).map((ref) => ref.slice(1, -1)))],
+          },
+        ],
+        jobs: [],
+      };
+      await putAnalysis(analysis);
+      await putHistory({
+        id: crypto.randomUUID(),
+        analysisId: analysis.id,
+        kind: 'prompt',
+        title: question.slice(0, 120),
+        meta: `${analysis.bullets[0]?.refs.length ?? 0} citações`,
+        createdAt: analysis.createdAt,
+      });
     } catch (err) {
       const code = isAppError(err) ? err.code : 'CHAT_FAILED';
       const detail = isAppError(err) ? (err.detail ?? '') : err instanceof Error ? err.message : '';
-      if (textNode) textNode.textContent = `Não consegui responder (${code}). ${detail}`.trim();
+      if (textNode) textNode.textContent = `Não consegui responder (${code}). ${humanizeDetail(detail)}`.trim();
       console.warn('[PR] chat falhou', err instanceof AppError ? err.code : err);
     } finally {
       sendButton.disabled = false;

@@ -74,3 +74,44 @@ export const ERROR_META: Record<ErrorCode, { area: ErrorArea; title: string }> =
   CHAT_NO_CORPUS: { area: 'Dashboard', title: 'Nenhum post salvo para conversar' },
   JOB_CLOSED: { area: 'Dashboard', title: 'Esta vaga não está mais disponível' },
 };
+
+const PROVIDER_HINTS: readonly (readonly [RegExp, string])[] = [
+  [/invalid x-api-key|invalid api key|incorrect api key|authentication_error|unauthorized/i, 'chave inválida ou revogada'],
+  [/permission|forbidden/i, 'chave sem permissão para este modelo'],
+  [/rate.?limit|too many requests/i, 'muitas requisições — aguarde alguns minutos'],
+  [/insufficient|quota|billing|credit balance/i, 'cota ou saldo do provedor esgotado'],
+  [/model.*(not found|does not exist)|unknown model/i, 'modelo indisponível para esta chave'],
+];
+
+/**
+ * Converte o detalhe técnico (inclusive o JSON cru do provedor) em uma frase curta
+ * para o usuário. Nunca devolve `request_id` nem payload completo.
+ */
+export function humanizeDetail(detail?: string): string {
+  if (!detail) return '';
+  const raw = detail.trim();
+  let message = raw;
+
+  if (raw.startsWith('{') || raw.includes('"error"')) {
+    try {
+      const parsed = JSON.parse(raw) as {
+        error?: { message?: string; type?: string };
+        message?: string;
+      };
+      message = parsed.error?.message ?? parsed.message ?? parsed.error?.type ?? '';
+    } catch {
+      message = raw;
+    }
+  }
+
+  for (const [pattern, text] of PROVIDER_HINTS) {
+    if (pattern.test(message) || pattern.test(raw)) return text;
+  }
+
+  const clean = message
+    .replace(/request_id[^,}\s]*/gi, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^[\s:.-]+/, '')
+    .trim();
+  return clean.length > 140 ? `${clean.slice(0, 137)}…` : clean;
+}

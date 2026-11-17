@@ -99,3 +99,40 @@ Só acrescente linhas. Nunca reescreva o histórico.
   ("X likes this") em vez do cargo.
 - Nota operacional: `chrome.runtime.reload()` via CDP derruba a inscrição da extensão carregada por
   `Extensions.loadUnpacked`; é preciso recarregar pelo chrome://extensions ou reabrir o navegador.
+
+## 2026-11-17 — correções do teste de usabilidade (perfil, erros, vagas, histórico)
+
+Medições que motivaram cada correção (Chrome real, perfil logado, DeepSeek):
+
+1. **Perfil não era lido.** `/in/xavierlucas/` com título "Lucas Xavier | LinkedIn", mas
+   `main h1` = **0** e `main h2` = 14 (o nome está em `<h2>`, junto de "0 notifications",
+   "About", "Activity", "Suggested for you"). `profile.ts` ancorava em `main h1` → `profile`
+   nunca salvo → MATCH MÉDIO "—" e Vagas sem match.
+   Correção: nome pelo `<h2>` que casa com o título da página (com lista de ruído), headline/
+   localização pelas linhas do card superior, skills pela seção "Competências" e, quando ela
+   não existe, pela stack declarada na headline/About (24 skills no perfil real).
+   Medição depois: "Perfil: Lucas Xavier · Senior Full-Stack…", 24 skills, MATCH MÉDIO 11%.
+
+2. **Erro de IA vazava o JSON do provedor.** `Falhou (AI_401). {"type":"error",…,"request_id":…}`
+   em Configurações e `Não consegui responder (AI_401). {…}` no chat.
+   Correção: `humanizeDetail()` em `errors.ts` (extrai `error.message`, mapeia 401/403/429/cota/
+   modelo para pt-BR, remove `request_id`, corta em 140 chars).
+   Medição depois: `Falhou (AI_401). chave inválida ou revogada`, sem `request_id`/JSON.
+
+3. **Vagas existiam no resumo mas a tela Vagas ficava vazia.** O painel chamava `putAnalysis`
+   e nunca `putJobs`; `jobs` store = 0 com "VAGAS ENCONTRADAS · 7" no resumo.
+   Correção: `putJobs(analysis.jobs)` após `putAnalysis`.
+   Medição depois: 8 vagas no store, tabela MATCH/VAGA/LOCAL/MODELO/STACK, Full-Stack 33%,
+   MATCH MÉDIO 11%.
+
+4. **Análises de prompt não iam para o Histórico** (filtro "Prompts" sempre vazio).
+   Correção: o chat do dashboard grava `putAnalysis` + `putHistory` (kind `prompt`).
+   Medição depois: Histórico 3 entradas, filtro Prompts com 1.
+
+5. **Painel bloqueava a análise fora do feed** ("Esta aba não é o feed") e o CTA não fazia nada.
+   Correção: só o scroll exige o feed; a análise usa os posts do IndexedDB em qualquer aba.
+   Medição depois: resumo de 29 posts gerado com o painel aberto como aba.
+
+Limitação conhecida (não corrigida): o detector de vagas aceita post de desabafo como vaga
+("Estou me aproximando de um mês de desemprego…" virou vaga com modelo "python", 0% match).
+Prompt de detecção precisa exigir sinais explícitos (cargo + empresa/link/aplicação).

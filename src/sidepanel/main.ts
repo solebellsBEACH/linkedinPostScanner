@@ -1,6 +1,6 @@
 import { AppError, isAppError, type ErrorCode } from '../shared/errors';
 import { getApiKey, getSettings, getTheme, PROVIDERS } from '../shared/storage';
-import { estimateUsage, getPostsSince, getProfile, putAnalysis, putHistory } from '../shared/idb';
+import { estimateUsage, getPostsSince, getProfile, putAnalysis, putHistory, putJobs } from '../shared/idb';
 import { analyze } from '../shared/summarize';
 import {
   IDLE_STATE,
@@ -371,6 +371,8 @@ async function runAnalysis(options: { ignoreProfile?: boolean } = {}): Promise<v
     });
 
     await putAnalysis(analysis);
+    // Sem isso as vagas existem no resumo mas a tela Vagas fica vazia.
+    if (analysis.jobs.length > 0) await putJobs(analysis.jobs);
     await putHistory({
       id: crypto.randomUUID(),
       analysisId: analysis.id,
@@ -434,16 +436,10 @@ async function init(): Promise<void> {
   renderState();
   connectPort();
 
-  if (!isFeed) {
-    setResult(
-      h(
-        'div',
-        { class: 'sp-empty' },
-        h('p', { text: 'Esta aba não é o feed do LinkedIn.' }),
-        h('p', { class: 'sp-empty-sub', text: 'Abra linkedin.com/feed e o painel passa a funcionar aqui.' }),
-      ),
-    );
-  }
+  // Analisar posts já coletados funciona em qualquer aba; só o scroll exige o feed.
+  notice.textContent = isFeed
+    ? 'Abra o feed do LinkedIn para ligar o scroll.'
+    : 'Scroll só roda no feed. Você ainda pode gerar resumo dos posts já coletados.';
 }
 
 console.log('[PR] side panel ready', PROVIDERS.length, 'provedores');
