@@ -109,14 +109,9 @@ chrome.runtime.onConnect.addListener((port) => {
 async function handleContent(tabId: number, port: chrome.runtime.Port, message: ContentMessage): Promise<void> {
   switch (message.type) {
     case 'HELLO': {
-      // SW reiniciou no meio do loop: manda START de novo (o content ignora se já roda).
-      if (stateOf(tabId).status === 'running') {
-        try {
-          port.postMessage({ type: 'START' });
-        } catch {
-          contentPorts.delete(tabId);
-        }
-      }
+      // Nada a fazer: se o SW reiniciou, o próximo ROUND re-registra o estado.
+      // Nunca reiniciar o scroll sem o usuário pedir.
+      console.log('[PR] content conectado', message.path);
       break;
     }
     case 'ROUND':

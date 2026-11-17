@@ -175,6 +175,15 @@ function readPost(activityId: string, card: HTMLElement, expanded: boolean): Pos
   };
 }
 
+function cardById(container: ParentNode, activityId: string): HTMLElement | null {
+  for (const anchor of container.querySelectorAll<HTMLAnchorElement>('a[href*="urn:li:activity:"]')) {
+    if (activityIdFromHref(anchor.getAttribute('href') ?? '') !== activityId) continue;
+    const card = findCard(anchor);
+    if (card) return card;
+  }
+  return null;
+}
+
 /**
  * Lê todos os posts montados no container.
  * `seen` evita reprocessar (a lista é virtualizada e recicla nós).
@@ -196,8 +205,13 @@ export async function extractPosts(container: ParentNode, seen: Set<string>): Pr
 
   for (const [id, card] of byId) {
     const expanded = await expandIfTruncated(card);
-    const post = readPost(id, card, expanded);
+    // A expansão re-renderiza o nó: relê o card atual antes de extrair.
+    const fresh = expanded ? (cardById(container, id) ?? card) : card;
+    const post = readPost(id, fresh, expanded);
     if (!post) {
+      // Marca como visto: sem isso o mesmo post falharia toda rodada e
+      // travaria o contador de progresso do loop.
+      seen.add(id);
       unrecognized += 1;
       continue;
     }

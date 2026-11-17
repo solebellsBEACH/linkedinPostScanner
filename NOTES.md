@@ -22,3 +22,18 @@ Só acrescente linhas. Nunca reescreva o histórico.
 - Classes são hashes de build (`k4dlm5`, `k4dljs`…). → proibido como seletor.
 - `/jobs-guest/jobs/api/jobPosting/<id>` responde 200 e depois **429** após ~65 chamadas
   rápidas. → a extensão não deve usar endpoint interno nenhum.
+
+## 2026-11-17 — implementação das fases 3 a 11
+
+- Extração usa `a[href*="urn:li:activity:"]` + caminhada até o card com
+  `[data-testid="expandable-text-box"]`. → posts sem texto (só mídia) não são coletados.
+- Contadores (reações/comentários/reposts) vêm de regex sobre o texto do card
+  (`1.234`, `1,2 mil`, `1.2K`). → número aproximado, não oficial.
+- Expansão de texto: click em `[data-testid="expandable-text-button"]` 1x por post,
+  espera 1,2s e relê o card re-consultando o DOM (a virtualização recria o nó).
+- Post que falha na extração entra em `seen` na primeira tentativa, senão o contador de
+  progresso nunca zera e o loop vai até o teto de rodadas.
+- Side panel e dashboard compartilham o IndexedDB (mesma origem da extensão);
+  só o content script roda no origin da página e por isso nunca abre IndexedDB.
+- IA faz streaming SSE de verdade (buffer por `\n\n`) para Anthropic/OpenAI/Groq e
+  NDJSON para Ollama; Gemini não streama nesta versão.
