@@ -60,7 +60,7 @@ export type HistoryEntry = {
 
 export type Settings = {
   theme: 'light' | 'dark';
-  provider: 'anthropic' | 'openai' | 'gemini' | 'groq' | 'ollama';
+  provider: 'anthropic' | 'openai' | 'deepseek' | 'gemini' | 'groq' | 'ollama';
   model: string;
   maxRounds: number;
   maxMinutes: number;

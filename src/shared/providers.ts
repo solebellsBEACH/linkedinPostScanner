@@ -11,7 +11,14 @@ export type ProviderInfo = {
   hint: string;
 };
 
-export const PROVIDER_ORDER: readonly Provider[] = ['anthropic', 'openai', 'gemini', 'groq', 'ollama'];
+export const PROVIDER_ORDER: readonly Provider[] = [
+  'anthropic',
+  'openai',
+  'deepseek',
+  'gemini',
+  'groq',
+  'ollama',
+];
 
 export const PROVIDER_INFO: Record<Provider, ProviderInfo> = {
   anthropic: {
@@ -29,6 +36,14 @@ export const PROVIDER_INFO: Record<Provider, ProviderInfo> = {
     models: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4o-mini'],
     needsKey: true,
     hint: 'platform.openai.com → API Keys',
+  },
+  deepseek: {
+    id: 'deepseek',
+    label: 'DeepSeek',
+    defaultModel: 'deepseek-chat',
+    models: ['deepseek-chat', 'deepseek-reasoner'],
+    needsKey: true,
+    hint: 'platform.deepseek.com → API Keys',
   },
   gemini: {
     id: 'gemini',
@@ -73,6 +88,7 @@ export type CallOptions = {
 export const DEFAULT_MODEL: Record<Provider, string> = {
   anthropic: PROVIDER_INFO.anthropic.defaultModel,
   openai: PROVIDER_INFO.openai.defaultModel,
+  deepseek: PROVIDER_INFO.deepseek.defaultModel,
   gemini: PROVIDER_INFO.gemini.defaultModel,
   groq: PROVIDER_INFO.groq.defaultModel,
   ollama: PROVIDER_INFO.ollama.defaultModel,

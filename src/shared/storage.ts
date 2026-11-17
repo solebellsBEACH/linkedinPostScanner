@@ -3,7 +3,7 @@ import type { Settings } from './types';
 export type Provider = Settings['provider'];
 export type Theme = Settings['theme'];
 
-export const PROVIDERS: readonly Provider[] = ['anthropic', 'openai', 'gemini', 'groq', 'ollama'];
+export const PROVIDERS: readonly Provider[] = ['anthropic', 'openai', 'deepseek', 'gemini', 'groq', 'ollama'];
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'light',

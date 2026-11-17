@@ -32,6 +32,11 @@ Durante o desenvolvimento: `npm run watch` e, a cada mudança, clique em **Recar
 | `NOTES.md` | descobertas de campo sobre o DOM do LinkedIn |
 | `design/prototype.html` | protótipo visual de referência |
 
+## Provedores de IA suportados
+
+Anthropic · OpenAI · DeepSeek · Google Gemini · Groq · Ollama (local).
+A chave é salva só no `chrome.storage.local` do seu navegador.
+
 ## Privacidade
 
 Chaves de IA ficam em `chrome.storage.local`, nunca são exportadas nem enviadas a nenhum servidor além do provedor escolhido. Sem telemetria.

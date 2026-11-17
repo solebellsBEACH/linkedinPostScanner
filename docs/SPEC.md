@@ -30,7 +30,8 @@ Comunicação: `Port` de longa duração entre content script e side panel (cont
 Permissões: `storage, unlimitedStorage, sidePanel, scripting, downloads, alarms, tabs`.
 
 Hosts: `linkedin.com`, `br.linkedin.com`, `api.anthropic.com`, `api.openai.com`,
-`generativelanguage.googleapis.com`, `api.groq.com`, `localhost:11434`, `127.0.0.1:11434`.
+`generativelanguage.googleapis.com`, `api.deepseek.com`, `api.groq.com`,
+`localhost:11434`, `127.0.0.1:11434`.
 
 Content scripts: `/feed/*`, `/search/results/content/*`, `/in/*`.
 `side_panel.default_path: "sidepanel.html"` · `options_page: "dashboard.html#/settings"`.
@@ -117,6 +118,7 @@ Falha → `PROFILE_UNREADABLE` com ações "Abrir meu perfil" / "Ver vagas sem m
 | Anthropic | `/v1/messages` | `x-api-key` + `anthropic-version` + `anthropic-dangerous-direct-browser-access: true` |
 | OpenAI | `/v1/chat/completions` | `Bearer` |
 | Gemini | `/v1beta/models/{m}:generateContent` | `?key=` |
+| DeepSeek | `/v1/chat/completions` | `Bearer` |
 | Groq | `/openai/v1/chat/completions` | `Bearer` |
 | Ollama | `localhost:11434/api/chat` | — |
 

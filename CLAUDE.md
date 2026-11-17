@@ -79,6 +79,8 @@ Bundles de saída: `content.js` (IIFE) · `sw.js`, `sidepanel.js`, `dashboard.js
   extensão é bloqueada).
 - **openai** — `POST https://api.openai.com/v1/chat/completions` · `Authorization: Bearer`
 - **gemini** — `POST https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key=`
+- **deepseek** — `POST https://api.deepseek.com/v1/chat/completions` · Bearer
+  (compatível com OpenAI; `deepseek-chat` e `deepseek-reasoner`)
 - **groq** — `POST https://api.groq.com/openai/v1/chat/completions` · Bearer
 - **ollama** — `POST http://localhost:11434/api/chat` · sem auth
 

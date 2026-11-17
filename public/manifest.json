@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "LinkedIn Post Scanner",
   "description": "Rola o feed do LinkedIn, extrai os posts e resume com a sua própria chave de IA.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/icon16.png",
@@ -25,6 +25,7 @@
     "https://api.openai.com/*",
     "https://generativelanguage.googleapis.com/*",
     "https://api.groq.com/*",
+    "https://api.deepseek.com/*",
     "http://localhost:11434/*",
     "http://127.0.0.1:11434/*"
   ],
@@ -39,7 +40,9 @@
         "https://www.linkedin.com/search/results/content/*",
         "https://www.linkedin.com/in/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ],

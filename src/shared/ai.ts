@@ -55,6 +55,19 @@ function build(
         stream: stream ? 'sse' : 'none',
       };
 
+    case 'deepseek':
+      return {
+        url: 'https://api.deepseek.com/v1/chat/completions',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+        body: {
+          model,
+          max_tokens: maxTokens,
+          messages: system ? [{ role: 'system', content: system }, ...chat] : chat,
+          stream,
+        },
+        stream: stream ? 'sse' : 'none',
+      };
+
     case 'groq':
       return {
         url: 'https://api.groq.com/openai/v1/chat/completions',
@@ -127,6 +140,7 @@ function textFromJson(provider: Provider, json: unknown): string {
       return blocks.map((b) => b.text ?? '').join('');
     }
     case 'openai':
+    case 'deepseek':
     case 'groq': {
       const choices = (data['choices'] ?? []) as { message?: { content?: string } }[];
       return choices[0]?.message?.content ?? '';

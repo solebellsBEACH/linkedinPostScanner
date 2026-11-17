@@ -37,3 +37,15 @@ Só acrescente linhas. Nunca reescreva o histórico.
   só o content script roda no origin da página e por isso nunca abre IndexedDB.
 - IA faz streaming SSE de verdade (buffer por `\n\n`) para Anthropic/OpenAI/Groq e
   NDJSON para Ollama; Gemini não streama nesta versão.
+
+## 2026-11-17 — provedor DeepSeek
+
+- Adicionado `deepseek` (v0.2.0): `POST https://api.deepseek.com/v1/chat/completions`,
+  `Authorization: Bearer`, SSE compatível com OpenAI (`choices[0].delta.content`).
+- Modelos: `deepseek-chat` (padrão) e `deepseek-reasoner`. O reasoner emite
+  `reasoning_content` antes do `content`; o parser ignora o primeiro e só
+  concatena `delta.content` — o resumo sai certo, mas sem a cadeia de raciocínio.
+- host_permissions inclui `https://api.deepseek.com/*`; sem isso o fetch da
+  extensão é bloqueado por CORS/permite.
+- Verificado sem navegador: bundle com fetch stubado devolve URL, header Bearer,
+  body `stream:true` e streaming incremental (`["Olá", ", mundo"]`).
