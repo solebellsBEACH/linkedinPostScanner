@@ -1,3 +1,22 @@
+import { openDb } from './shared/idb';
+import { getSchemaVersion, setSchemaVersion } from './shared/storage';
+
+const SCHEMA_VERSION = 1;
+
+/** Garante stores do IndexedDB e schemaVersion gravado. Falha silenciosa: SW não pode quebrar. */
+async function ensureSchema(): Promise<void> {
+  try {
+    if ((await getSchemaVersion()) === SCHEMA_VERSION) return;
+    await openDb();
+    await setSchemaVersion(SCHEMA_VERSION);
+    console.log('[PR] schema v1 pronto');
+  } catch (err) {
+    console.warn('[PR] ensureSchema falhou', err);
+  }
+}
+
+void ensureSchema();
+
 const LINKEDIN = /^https:\/\/([a-z]{2,3}\.)?linkedin\.com\//;
 
 const PANEL_PATH = 'sidepanel.html';
@@ -27,6 +46,7 @@ void enableOnActionClick();
 
 chrome.runtime.onInstalled.addListener(() => {
   void enableOnActionClick();
+  void ensureSchema();
   console.log('[PR] onInstalled');
 });
 
