@@ -49,3 +49,14 @@ Só acrescente linhas. Nunca reescreva o histórico.
   extensão é bloqueado por CORS/permite.
 - Verificado sem navegador: bundle com fetch stubado devolve URL, header Bearer,
   body `stream:true` e streaming incremental (`["Olá", ", mundo"]`).
+
+## 2026-11-17 — crash do loop por seletor inválido
+
+- Sintoma: painel em `erro` / "O LinkedIn mudou o layout da página" logo ao ligar o scroll.
+- Causa: `isPaginationButton()` chamava `el.closest('...,.vjs-*,...')`. `.vjs-*` não é
+  seletor CSS válido → `SyntaxError` — capturado pelo `catch` do loop e mascarado como
+  `DOM_CHANGED`. Não era mudança de layout.
+- Correção: `[class*="vjs-"]` + `safeClosest()` que loga `[PR] seletor inválido` e devolve
+  `null` em vez de lançar. Detalhe do erro agora inclui `err.name`.
+- Consequência: um seletor errado nunca mais derruba o scroll silenciosamente; o console
+  denuncia qual seletor quebrou.

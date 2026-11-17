@@ -144,14 +144,22 @@ export function findScrollRoot(): { el: HTMLElement; strategy: string } {
   return { el: document.documentElement, strategy: 'documentElement' };
 }
 
-export function isPaginationButton(el: Element): boolean {
-  if (
-    el.closest(
-      '[data-virtualized-item],[data-lazy-mount-id],[role="dialog"],.vjs-*,[data-testid="dialog-content"],[data-testid="expandable-text-button"]',
-    )
-  ) {
-    return false;
+/** Seletores válidos: `.vjs-*` não existe em CSS — classes de vídeo usam [class*="vjs-"]. */
+const NEVER_PAGINATION =
+  '[data-virtualized-item],[data-lazy-mount-id],[role="dialog"],[class*="vjs-"],[data-testid="dialog-content"],[data-testid="expandable-text-button"]';
+
+function safeClosest(el: Element, selector: string): Element | null {
+  try {
+    return el.closest(selector);
+  } catch (err) {
+    // Um seletor inválido nunca deve derrubar o loop (foi assim que .vjs-* virou DOM_CHANGED).
+    console.warn('[PR] seletor inválido', selector, err);
+    return null;
   }
+}
+
+export function isPaginationButton(el: Element): boolean {
+  if (safeClosest(el, NEVER_PAGINATION)) return false;
   const text = normalizeText(el.textContent ?? '').trim();
   if (!text) return false;
   return PAGINATION_TEXTS.includes(text) || text.startsWith('show more results') || text.startsWith('ver mais resultados');
@@ -159,7 +167,7 @@ export function isPaginationButton(el: Element): boolean {
 
 function findPaginationButton(): HTMLElement | null {
   const explicit = document.querySelector<HTMLElement>('[data-testid="load-more"]');
-  if (explicit && !explicit.closest('[data-virtualized-item]')) return explicit;
+  if (explicit && !safeClosest(explicit, '[data-virtualized-item]')) return explicit;
 
   const candidates = document.querySelectorAll<HTMLElement>('button,a[role="button"]');
   for (const candidate of candidates) {
@@ -363,7 +371,7 @@ async function runLoop(root: HTMLElement, token: number): Promise<void> {
       }
     }
   } catch (err) {
-    const detail = err instanceof Error ? err.message : String(err);
+    const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
     console.error('[PR] loop falhou', err);
     emit({ type: 'error', code: 'DOM_CHANGED', detail });
   } finally {
