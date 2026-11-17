@@ -79,6 +79,8 @@ const statusText = h('span', { class: 'sp-status', text: 'parado' });
 const dot = h('span', { class: 'sp-dot', 'aria-hidden': 'true' });
 
 const notice = h('p', { class: 'sp-notice', text: 'Abra o feed do LinkedIn para ligar o scroll.' });
+/** Sem chave o produto continua utilizável: só resumo/prompt/chat ficam indisponíveis. */
+let noKey = false;
 
 const scrollCard = h(
   'section',
@@ -155,7 +157,11 @@ function renderState(): void {
     scrollState.status === 'running' ? 'is-live' : scrollState.status === 'error' ? 'is-error' : ''
   }`;
 
-  notice.hidden = isFeed && tabId !== null;
+  notice.hidden = isFeed && tabId !== null && !noKey;
+  if (noKey) {
+    notice.textContent =
+      'Sem chave de IA: o scroll e a coleta funcionam. Resumo, prompt e chat pedem uma chave em Configurações.';
+  }
 }
 
 function setResult(node: HTMLElement | null): void {
@@ -442,10 +448,19 @@ async function init(): Promise<void> {
   renderState();
   connectPort();
 
+  try {
+    const settings = await getSettings();
+    noKey = PROVIDER_INFO[settings.provider].needsKey && !(await getApiKey(settings.provider));
+  } catch {
+    noKey = false;
+  }
+
   // Analisar posts já coletados funciona em qualquer aba; só o scroll exige o feed.
-  notice.textContent = isFeed
-    ? 'Abra o feed do LinkedIn para ligar o scroll.'
-    : 'Scroll só roda no feed. Você ainda pode gerar resumo dos posts já coletados.';
+  if (!noKey)
+    notice.textContent = isFeed
+      ? 'Abra o feed do LinkedIn para ligar o scroll.'
+      : 'Scroll só roda no feed. Você ainda pode gerar resumo dos posts já coletados.';
+  renderState();
 }
 
 console.log('[PR] side panel ready', PROVIDERS.length, 'provedores');

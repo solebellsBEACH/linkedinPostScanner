@@ -157,3 +157,14 @@ Correções:
 Medição depois: perfil limpo do IDB → resumo de 29 posts OK, 8 vagas com "—"; abrir `/in/me`
 → perfil salvo na hora (24 skills); novo resumo → Full-Stack 33%. Store `jobs` = 8 linhas
 distintas, sem duplicatas.
+
+## 2026-11-17 — sem chave de IA não bloqueia o produto
+
+Princípio: IA é enriquecimento, não pré-requisito. Com `aiKeys` vazio, o painel mostra
+"Sem chave de IA: o scroll e a coleta funcionam. Resumo, prompt e chat pedem uma chave em
+Configurações." e o CTA segue clicável; ao clicar aparece o cartão "Nenhuma chave de IA
+configurada" com a ação "Configurar chave" (código AI_NO_KEY). Nada é desabilitado além do
+toggle fora do feed, e nenhum post/análise anterior é apagado.
+
+Evidência de que a coleta independe de IA: os 29 posts do teste foram coletados antes de
+qualquer chave existir no perfil.
