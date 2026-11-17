@@ -60,3 +60,19 @@ Só acrescente linhas. Nunca reescreva o histórico.
   `null` em vez de lançar. Detalhe do erro agora inclui `err.name`.
 - Consequência: um seletor errado nunca mais derruba o scroll silenciosamente; o console
   denuncia qual seletor quebrou.
+
+## 2026-11-17 — testes de usabilidade automatizados (headless + CDP)
+
+- Ambiente: Chrome for Testing 147 headless (`--load-extension=dist`, `--remote-debugging-port`,
+  `--remote-allow-origins=*`). O Chrome branded 151 **ignora** `--load-extension`; o puppeteer
+  Chromium aceita. IDs de extensão não assinada = sha256 do caminho absoluto (hex→a..p).
+- Verificado: 6 rotas, estados vazios, troca de provedor (hint/modelo/Sobre), salvar chave,
+  `Testar conexão` contra a API real da DeepSeek com chave falsa → `AI_401` com a mensagem do
+  provedor (prova URL + header + mapeamento), tema escuro persistindo, 4 cartões de erro via
+  `?prError=`, e — com dados semeados no IndexedDB — overview, tabela de vagas, detalhe com
+  requisitos ✓/–, expansão do histórico e contagem do corpus do chat.
+- 3 defeitos encontrados e corrigidos: hint/Sobre do provedor não atualizavam ao trocar o select;
+  dashboard ficava com números velhos quando o painel gravava em outra aba (agora re-renderiza em
+  `focus`/`visibilitychange`, com throttle de 1,5 s); `#/job?id=<id>` caía na visão geral.
+- Não coberto (exige sessão logada): loop de scroll, extração, expansão de texto, dedupe,
+  critérios de parada, contador ao vivo e sobrevivência à morte do SW.

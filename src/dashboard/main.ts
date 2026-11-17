@@ -143,6 +143,19 @@ async function render(): Promise<void> {
 
 window.addEventListener('hashchange', () => void render());
 
+// O side panel grava no IndexedDB enquanto esta aba fica em background.
+// Sem isso o dashboard mostra números velhos até trocar de rota.
+let lastRefresh = 0;
+function refreshIfStale(): void {
+  const now = Date.now();
+  if (now - lastRefresh < 1500) return;
+  lastRefresh = now;
+  if (!location.search.includes('prError')) void render();
+}
+
+document.addEventListener('visibilitychange', refreshIfStale);
+window.addEventListener('focus', refreshIfStale);
+
 async function boot(): Promise<void> {
   applyTheme(await getTheme());
   if (!location.hash || location.hash === '#') location.hash = '#/overview';

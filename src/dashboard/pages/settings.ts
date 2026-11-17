@@ -46,6 +46,15 @@ export async function renderSettings(): Promise<HTMLElement> {
 
   const existingKey = await getApiKey(settings.provider);
 
+  const providerHint = h('p', { class: 'field-hint', text: info.hint });
+  const aboutProvider = h('dd', { text: info.label });
+  const keyHint = h('p', {
+    class: 'field-hint',
+    text: existingKey
+      ? 'Existe uma chave salva para este provedor. Ela nunca sai do seu navegador.'
+      : 'A chave fica só no chrome.storage.local.',
+  });
+
   // ---------------------------------------------------------------- tema
 
   const themeButtons = h('div', { class: 'segmented', role: 'group', 'aria-label': 'Tema' });
@@ -103,9 +112,12 @@ export async function renderSettings(): Promise<HTMLElement> {
       option.value = model;
       modelList.append(option);
     }
-    keyInput.disabled = !PROVIDER_INFO[provider].needsKey;
-    keyInput.placeholder = PROVIDER_INFO[provider].needsKey ? 'cole a chave do provedor' : 'este provedor não usa chave';
-    status.textContent = `Provedor alterado para ${PROVIDER_INFO[provider].label}.`;
+    const nextInfo = PROVIDER_INFO[provider];
+    keyInput.disabled = !nextInfo.needsKey;
+    keyInput.placeholder = nextInfo.needsKey ? 'cole a chave do provedor' : 'este provedor não usa chave';
+    providerHint.textContent = nextInfo.hint;
+    aboutProvider.textContent = nextInfo.label;
+    status.textContent = `Provedor alterado para ${nextInfo.label}.`;
     void refreshKeyPlaceholder();
   });
 
@@ -114,6 +126,9 @@ export async function renderSettings(): Promise<HTMLElement> {
     const stored = await getApiKey(provider);
     keyInput.value = '';
     keyInput.placeholder = stored ? 'chave salva · digite para substituir' : 'cole a chave do provedor';
+    keyHint.textContent = stored
+      ? 'Existe uma chave salva para este provedor. Ela nunca sai do seu navegador.'
+      : 'A chave fica só no chrome.storage.local.';
   }
 
   modelInput.addEventListener('change', () => {
@@ -214,7 +229,7 @@ export async function renderSettings(): Promise<HTMLElement> {
       h('dt', { text: 'Schema dos dados' }),
       h('dd', { text: schemaVersion === undefined ? 'não inicializado' : String(schemaVersion) }),
       h('dt', { text: 'Provedor' }),
-      h('dd', { text: info.label }),
+      aboutProvider,
     ),
     schemaVersion !== 1
       ? h('p', { class: 'settings-warn', text: 'Schema diferente do esperado: recarregue a extensão em chrome://extensions (VERSION_MISMATCH).' })
@@ -229,7 +244,7 @@ export async function renderSettings(): Promise<HTMLElement> {
       { class: 'field' },
       h('label', { class: 'field-label', text: 'Provedor de IA' }),
       providerSelect,
-      h('p', { class: 'field-hint', text: info.hint }),
+      providerHint,
     ),
     h(
       'div',
@@ -243,7 +258,7 @@ export async function renderSettings(): Promise<HTMLElement> {
       { class: 'field' },
       h('label', { class: 'field-label', text: 'Chave de API' }),
       keyInput,
-      h('p', { class: 'field-hint', text: existingKey ? 'Existe uma chave salva para este provedor. Ela nunca sai do seu navegador.' : 'A chave fica só no chrome.storage.local.' }),
+      keyHint,
       h('div', { class: 'row-actions' }, saveKeyButton, testButton),
     ),
     status,
